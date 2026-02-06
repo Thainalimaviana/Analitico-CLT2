@@ -8,7 +8,7 @@
 
   .dark-mode {
     --gradiente-inicio: #000000;
-    --gradiente-fim: #568500;
+    --gradiente-fim: #018f08;
     --cor-texto: #ffffff;
     --bg-container: rgba(0, 0, 0, 0.4);
     --bg-input: rgba(255, 255, 255, 0.08);
@@ -16,7 +16,7 @@
 
   body:not(.dark-mode) .btn-filtro,
   body:not(.dark-mode) .btn-filtrar {
-    background: #52df008e !important;
+    background: #ffffffa6 !important;
     color: #006622 !important;
     border: 1px solid #009b3a !important;
   }
