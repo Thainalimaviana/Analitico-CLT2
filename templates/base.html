@@ -110,7 +110,7 @@
 
         <div class="sidebar-title">
             {{ titulo if titulo else request.endpoint.replace('_', ' ').title() }}
-            <p style="font-size:14px">CLT</p>
+            <p style="font-size:14px">CLT Outside</p>
         </div>
 
         <div class="sidebar-user">{{ session.get('user') }}</div>
@@ -145,8 +145,8 @@
     </div>
 
     {% if session.get('role') == 'admin' %}
-        <a href="https://analitico-inss.onrender.com/indice_dia" class="analitico-btn">
-            Analítico INSS
+        <a href="https://analitico.onrender.com/indice_dia" class="analitico-btn">
+            Analítico CLT
         </a>
     {% endif %}
 
