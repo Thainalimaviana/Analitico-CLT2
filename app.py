@@ -333,14 +333,12 @@ def relatorios():
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute("""
-        SELECT DISTINCT consultor
-        FROM propostas
-        WHERE consultor IS NOT NULL
-        AND consultor NOT IN (SELECT nome FROM users WHERE role = 'admin')
-        ORDER BY consultor;
-    """)
-    usuarios = [u[0] for u in cur.fetchall()]
+    cur.execute("SELECT nome FROM users WHERE role != 'admin' ORDER BY nome;")
+    usuarios = cur.fetchall()
+    if usuarios:
+        usuarios = [u[0] for u in usuarios]
+    else:
+        usuarios = []
 
     user = request.form.get("usuario") or request.args.get("usuario")
     data_ini = request.form.get("data_ini") or request.args.get("data_ini")
@@ -387,6 +385,12 @@ def relatorios():
     data_ini = normalizar_data(data_ini)
     data_fim = normalizar_data(data_fim)
 
+    if data_ini and len(data_ini) == 10:
+        data_ini = data_ini + " 00:00:00"
+
+    if data_fim and len(data_fim) == 10:
+        data_fim = data_fim + " 23:59:59"
+
     ph = "?" if isinstance(conn, sqlite3.Connection) else "%s"
 
     query_base = f"""
@@ -406,8 +410,8 @@ def relatorios():
             return f"LOWER({campo}) LIKE LOWER({ph})", f"%{valor}%"
 
     if user and user.strip() and user != "-":
-        condicoes.append(f"LOWER(consultor) = LOWER({ph})")
-        params.append(user)
+        condicoes.append(f"LOWER(consultor) LIKE LOWER({ph})")
+        params.append(f"{user}%")
 
     if data_ini and data_fim:
         condicoes.append(f"data BETWEEN {ph} AND {ph}")
@@ -1384,9 +1388,6 @@ def editar_meta_dia():
     conn.commit()
     conn.close()
     return redirect(url_for("painel_admin"))
-
-import random
-import string
 
 @app.route("/ranking", methods=["GET"])
 def ranking():
