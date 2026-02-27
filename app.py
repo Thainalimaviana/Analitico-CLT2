@@ -903,6 +903,10 @@ def painel_usuario():
     data_fim = request.args.get("data_fim")
     periodo = request.args.get("periodo")
     mes = request.args.get("mes")
+    busca = request.args.get("busca", "").strip()
+    fonte_filtro = (request.args.get("fonte") or "").strip()
+    banco_filtro = (request.args.get("banco") or "").strip()
+    observacao_filtro = (request.args.get("observacao") or "").strip()
 
     agora = datetime.now()
     hoje = agora.strftime("%Y-%m-%d")
@@ -932,10 +936,10 @@ def painel_usuario():
     if isinstance(conn, sqlite3.Connection):
         query = f"""
             SELECT id, data, fonte, banco, senha_digitada, tabela, nome_cliente, cpf,
-                   valor_equivalente, valor_original, observacao, telefone
+                    valor_equivalente, valor_original, observacao, telefone
             FROM propostas
-            WHERE consultor = {ph} AND date(data) BETWEEN {ph} AND {ph}
-            ORDER BY datetime(data) DESC;
+            WHERE consultor = {ph}
+            AND date(data) BETWEEN {ph} AND {ph}
         """
     else:
         query = f"""
@@ -944,10 +948,38 @@ def painel_usuario():
             FROM propostas
             WHERE consultor = {ph}
               AND DATE(data AT TIME ZONE 'America/Sao_Paulo') BETWEEN {ph} AND {ph}
-            ORDER BY data DESC;
         """
 
-    cur.execute(query, (consultor_filtro, inicio, fim))
+    params = [consultor_filtro, inicio, fim]
+
+    if busca:
+        query += f"""
+            AND (
+                LOWER(nome_cliente) LIKE LOWER({ph})
+                OR REPLACE(REPLACE(cpf, '.', ''), '-', '') LIKE {ph}
+            )
+        """
+        params.append(f"%{busca}%")
+        params.append(busca.replace(".", "").replace("-", ""))
+
+    if fonte_filtro:
+        query += f" AND LOWER(fonte) = LOWER({ph})"
+        params.append(fonte_filtro)
+
+    if banco_filtro:
+        query += f" AND LOWER(banco) = LOWER({ph})"
+        params.append(banco_filtro)
+
+    if observacao_filtro:
+        query += f" AND LOWER(observacao) = LOWER({ph})"
+        params.append(observacao_filtro)
+
+    if isinstance(conn, sqlite3.Connection):
+        query += " ORDER BY datetime(data) DESC;"
+    else:
+        query += " ORDER BY data DESC;"
+
+    cur.execute(query, tuple(params))
     propostas_raw = cur.fetchall()
     propostas = []
 
@@ -992,21 +1024,44 @@ def painel_usuario():
         mes_titulo = datetime.now().strftime("%B/%Y")
 
     return render_template(
-        "painel_usuario.html",
-        usuario_logado=usuario_logado,
-        propostas=propostas,
-        total_eq=total_eq,
-        total_or=total_or,
-        consultores=consultores,
-        consultor_filtro=consultor_filtro,
-        role=role,
-        inicio=inicio,
-        fim=fim,
-        mes=mes,
-        mes_titulo=mes_titulo,
-        hoje=hoje,
-        meta_individual=meta_individual,
-        falta_meta=falta_meta
+         "painel_usuario.html",
+         usuario_logado=usuario_logado,
+         propostas=propostas,
+         total_eq=total_eq,
+         total_or=total_or,
+         consultores=consultores,
+         consultor_filtro=consultor_filtro,
+         role=role,
+         inicio=inicio,
+         fim=fim,
+         mes=mes,
+         mes_titulo=mes_titulo,
+         hoje=hoje,
+         meta_individual=meta_individual,
+         falta_meta=falta_meta,    
+
+         fonte_filtro=fonte_filtro,
+         banco_filtro=banco_filtro,
+         observacao_filtro=observacao_filtro,       
+
+         fontes_lista=[
+             "URA", "Consultados antigos", "Consultados de hoje",
+             "Indicação", "Cliente de analítico/carteira",
+             "Tráfego", "Consultados Mercantil",
+             "Consultados V8", "SMS", "Consultados Facta"
+         ],     
+
+         bancos_lista=[
+             "C6", "Amigoz", "Presença", "Prata", "V8",
+             "PAN", "Facta-CLT", "Facta-FGTS",
+             "Tá Quitado", "Mercantil", "BMG", "HUB"
+         ],     
+
+         observacoes_lista=[
+             "PAGO", "AGUARDANDO PAGAMENTO",
+             "ANALISE MESA", "REPRESENTAÇÃO",
+             "INTEGRADA", "ANDAMENTO"
+         ],
     )
 
 @app.route("/editar_meta_individual", methods=["POST"])
@@ -1332,44 +1387,6 @@ def editar_meta_dia():
 
 import random
 import string
-
-@app.route("/recuperar_senha", methods=["POST"])
-def recuperar_senha():
-    data = request.get_json()
-    nome = data.get("nome", "").strip()
-
-    if not nome:
-        return jsonify({"erro": "Usuário inválido"}), 400
-
-    conn = get_conn()
-    cur = conn.cursor()
-
-    ph = "?" if isinstance(conn, sqlite3.Connection) else "%s"
-
-    cur.execute(
-        f"SELECT id FROM users WHERE nome = {ph}",
-        (nome,)
-    )
-    user = cur.fetchone()
-
-    if not user:
-        conn.close()
-        return jsonify({"erro": "Usuário não encontrado"}), 404
-
-    chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
-    senha_temp = "".join(random.choice(chars) for _ in range(8))
-
-    senha_hash = generate_password_hash(senha_temp)
-
-    cur.execute(
-        f"UPDATE users SET senha = {ph} WHERE nome = {ph}",
-        (senha_hash, nome)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({"senha": senha_temp})
 
 @app.route("/ranking", methods=["GET"])
 def ranking():

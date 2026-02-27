@@ -55,6 +55,11 @@
     font-weight: 700;
   }
 
+  .input-data.input-busca {
+    width: 220px !important;
+    flex: 0 0 220px !important;
+  }
+
   .tabela-usuario {
     width: 96%;
     max-width: 1600px;
@@ -228,6 +233,52 @@
       font-size: 15px;
     }
   }
+
+  .form-filtro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .input-data.input-busca {
+    flex: 0 0 200px !important;
+    width: 200px !important;
+  }
+
+  .filtros-painel select.select-filtro {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cfcfcf;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    font-size: 14px;
+    color: var(--cor-texto);
+    font-weight: 600;
+    height: 38px;
+  }
+
+  .filtros-painel select.select-filtro:focus {
+    outline: none;
+    border-color: #00a65a;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.822);
+  }
+
+  body:not(.dark-mode) .filtros-painel select.select-filtro option {
+    background: #ffffff;
+    color: #1b1b1b;
+  }
+
+  body.dark-mode .filtros-painel select.select-filtro {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+  }
+
+  body.dark-mode .filtros-painel select.select-filtro option {
+    background: #0f2b18;
+    color: #ffffff;
+  }
 </style>
 
 <div class="painel-usuario">
@@ -254,18 +305,43 @@
       <button type="button" class="btn-filtro" onclick="selecionarPeriodo('ultima_semana')">Última Semana</button>
       <button type="button" class="btn-filtro" onclick="selecionarPeriodo('hoje')">Hoje</button>
       <button type="button" class="btn-filtro" onclick="selecionarPeriodo('tudo')">Tudo</button>
+      <select name="fonte" class="select-filtro">
+        <option value="">Fonte: Todas</option>
+        {% for f in fontes_lista %}
+        <option value="{{ f }}" {% if fonte_filtro==f %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="banco" class="select-filtro">
+        <option value="">Banco: Todos</option>
+        {% for b in bancos_lista %}
+        <option value="{{ b }}" {% if banco_filtro==b %}selected{% endif %}>{{ b }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="observacao" class="select-filtro">
+        <option value="">Observação: Todas</option>
+        {% for o in observacoes_lista %}
+        <option value="{{ o }}" {% if observacao_filtro==o %}selected{% endif %}>{{ o }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="busca" placeholder="Buscar CPF ou Nome..." value="{{ request.args.get('busca', '') }}"
+        class="input-data input-busca">
+
+      <button type="submit" class="btn-filtrar">Buscar</button>
     </div>
+
   </form>
 
   <div class="cards-container">
     <div class="card verde">
       <h3>Valor Equivalente</h3>
-      <p class="valor">R$ {{ "{:,.2f}".format(total_eq or 0) }}</p>
+      <p class="valor">{{ total_eq|brl }}</p>
     </div>
 
     <div class="card azul">
       <h3>Valor Original</h3>
-      <p class="valor">R$ {{ "{:,.2f}".format(total_or or 0) }}</p>
+      <p class="valor">{{ total_or|brl }}</p>
     </div>
 
     <div class="card amarelo">
@@ -276,11 +352,8 @@
     <div class="card cinza">
       <h3>Falta para Meta</h3>
       <p class="valor">
-        R$ {{
-        "{:,.2f}".format((meta_individual or 0) - (total_eq or 0))
-        if (meta_individual and meta_individual > total_eq)
-        else "0,00"
-        }}
+        {{ ((meta_individual or 0) - (total_eq or 0))|brl if meta_individual and meta_individual > total_eq else "R$
+        0,00" }}
       </p>
     </div>
   </div>
@@ -313,8 +386,8 @@
           <td>{{ p[5] or "" }}</td>
           <td>{{ p[6] or "" }}</td>
           <td>{{ p[7] or "" }}</td>
-          <td>R$ {{ "{:,.2f}".format(p[8] | float or 0) }}</td>
-          <td>R$ {{ "{:,.2f}".format(p[9] | float or 0) }}</td>
+          <td>{{ p[8]|brl }}</td>
+          <td>{{ p[9]|brl }}</td>
           <td>{{ p[10] or "" }}</td>
           <td>{{ p[11] or "" }}</td>
           <td class="acoes">
