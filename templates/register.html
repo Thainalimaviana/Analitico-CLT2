@@ -1,0 +1,175 @@
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+{% extends "base.html" %}
+{% block title %}Criar Usuário{% endblock %}
+
+{% block content %}
+<style>
+  .register-wrapper {
+    max-width: 520px;
+    margin: 60px auto;
+  }
+
+  .register-card {
+    background: var(--bg-card);
+    border-radius: 18px;
+    padding: 35px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .register-title {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 25px;
+    font-weight: 600;
+  }
+
+  .barra-cpf,
+  select.barra-cpf {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .dark-mode .barra-cpf,
+  .dark-mode select.barra-cpf {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 15px;
+  }
+
+  .btn-criar {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-criar:hover {
+    background: #15803d;
+  }
+
+  .btn-cancelar {
+    background: #f1f5f9;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 10px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+  }
+
+  .dark-mode .btn-cancelar {
+    background: transparent;
+  }
+
+  .erro {
+    background: rgba(255, 0, 0, 0.15);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .msg-sucesso {
+    background: rgba(0, 255, 0, 0.15);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .btn-criar {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: .35s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-criar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-cancelar {
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: .25s;
+  }
+
+  .btn-cancelar:hover {
+    background: #ef4444;
+    color: white;
+  }
+</style>
+
+<div class="register-wrapper">
+
+  <h2 class="register-title">Criar Novo Usuário</h2>
+
+  <div class="register-card">
+    {% if erro %}
+    <div class="erro"><i class="fa fa-exclamation-triangle"></i> {{ erro }}</div>
+    {% endif %}
+    {% if sucesso %}
+    <div class="msg-sucesso"><i class="fa fa-check-circle"></i> {{ sucesso }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <input class="barra-cpf" type="text" name="nome" placeholder="Nome do Usuário" required>
+      <input class="barra-cpf" type="password" name="senha" placeholder="Senha" required>
+
+      <select name="role" class="barra-cpf" required>
+        <option value="">Selecione o tipo de acesso</option>
+        <option value="user">Usuário Comum</option>
+        <option value="admin">Administrador</option>
+      </select>
+
+      <div class="button-group">
+
+        <button type="submit" class="btn-criar">
+          <i class="fa fa-user-plus"></i> Criar Usuário
+        </button>
+
+        <a href="{{ url_for('usuarios') }}" class="btn-cancelar">
+          Cancelar
+        </a>
+
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
